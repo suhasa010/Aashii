@@ -166,7 +166,7 @@ def static_command(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     chat_mem = context.bot.get_chat_member(Literal.CHAT_GROUP_ID, user_id)
     user_in_group = chat_mem.status in (
-        ChatMember.ADMIN,
+        ChatMember.ADMINISTRATOR,
         ChatMember.CREATOR,
         ChatMember.MEMBER,
     )
