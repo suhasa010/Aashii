@@ -25,11 +25,7 @@ commands = {
         BotCommand("start", "Start the adventure"),
     ],
     "private": [
-        ("invite", "To join BookCrushGroup"),
+        ("invite", "Request to join A GRoUP Of eBooKz®"),
         ("query", "General queries, appeals etc"),
-        ("donate", "Donate to BookCrush"),
-        ("cross", "Request a cross promo"),
-        ("paid", "Request a paid promo"),
-        ("dmca", "Request DMCA takedown"),
     ],  # FIXME: Keep it hardcoded? [_command(fname) for fname in os.listdir("data/static")],
 }
