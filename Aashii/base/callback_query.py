@@ -23,11 +23,11 @@ def answer_join_request(update: Update, context: CallbackContext):
     if update.callback_query.data == "approve":
         status = f"{Message.JOIN_REQUEST_APPROVED}"
         context.bot.approve_chat_join_request(Literal.CHAT_GROUP_ID, user_id)
-        context.bot.send_message(user.id, Message.INFORM_APPROVAL)
+        context.bot.send_message(user_id, Message.INFORM_APPROVAL)
     else:
         status = f"{Message.JOIN_REQUEST_DECLINED}"
         context.bot.decline_chat_join_request(Literal.CHAT_GROUP_ID, user_id)
-        context.bot.send_message(user.id, Message.INFORM_DECLINE)
+        context.bot.send_message(user_id, Message.INFORM_DECLINE)
 
     text = update.callback_query.message.text_html_urled.replace(
         Label.PENDING_REQUEST, ""
