@@ -60,7 +60,7 @@ class Message:
     )
 
     CHAT_LINK_INFO = (
-        "Clicking on the below link will allow you to place a request to join "
+        "Clicking on the below link(within the next 2 mins) will allow you to place a request to join "
         "the group. <b>Your answers are auto-moderated and joining requests "
         "are automatically approved if they are deemed fit. If you don't "
         "answer them properly with all the details, don't expect to be "
