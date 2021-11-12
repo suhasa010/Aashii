@@ -158,7 +158,7 @@ class Message:
         "Please note, that this bot is for contacting admins "
         "of <b>A GRoUP Of eBooKz®</b> Group\n\n"
         "Click /invite if you want to join the A GRoUP Of eBooKz® Group.\n\n"
-        "<b>Do not request books through this bot!</b>"
+        "<b>Do not request books through this bot!</b>\n"
         "press Menu button to find out the list of actions you can "
         "perform using the bot.\n\n"
         "As soon as an admin connects with you, you'll receive a notification."
