@@ -39,7 +39,7 @@ def _send_admins(context: CallbackContext):
 
 
 def _send_invite_link(update: Update, context: CallbackContext):
-    expire = datetime.today() + timedelta(days=1)
+    expire = datetime.today() + timedelta(days=0,minutes=2)
     link = context.bot.create_chat_invite_link(
         chat_id=Literal.CHAT_GROUP_ID, expire_date=expire, creates_join_request=True
     )
