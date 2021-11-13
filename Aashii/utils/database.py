@@ -43,6 +43,19 @@ class Database:
         self.connection.commit()
         cur.close()
 
+    def add_invite_link(self, user_id: int, message_id: int):
+        """Add message with invite link generated for given user."""
+        cur = self.connection.cursor()
+        cur.execute(
+            Query.ADD_INVITE_LINK,
+            {
+                "user_id": user_id,
+                "message_id": message_id,
+            },
+        )
+        self.connection.commit()
+        cur.close()
+
     def add_user(self, user_id: int, username: str, full_name: str):
         """Add the user with unblocked status."""
         cur = self.connection.cursor()
@@ -52,6 +65,22 @@ class Database:
         )
         self.connection.commit()
         cur.close()
+
+    def get_invite_links_count(self, user_id: int):
+        """Get the number of invite links generated for user."""
+        cur = self.connection.cursor()
+        cur.execute(Query.GET_INVITE_LINKS_COUNT, {"user_id": user_id})
+        (count,) = next(cur, (0,))
+        cur.close()
+        return count
+
+    def get_last_invite_message_id(self, user_id: int):
+        """Get the latest invite message of given user."""
+        cur = self.connection.cursor()
+        cur.execute(Query.GET_LAST_INVITE_MESSAGE_ID, {"user_id": user_id})
+        (message_id,) = next(cur, (0,))
+        cur.close()
+        return message_id
 
     def get_last_user_message_id(self, user_id: int):
         """Get the latest message from given user."""
@@ -133,6 +162,13 @@ class Database:
         total = len(users)
         cur.close()
         return users, total
+
+    def reset_invite_links(self, user_id: int):
+        """Reset the invite links count for given user."""
+        cur = self.connection.cursor()
+        cur.execute(Query.RESET_INVITE_LINKS, {"user_id": user_id})
+        self.connection.commit()
+        cur.close()
 
     def set_user_blocked(self, user_id: int, blocked: bool):
         """Set the user status as True if they are blocked and False on otherwise."""

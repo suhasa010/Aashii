@@ -18,6 +18,8 @@ class Literal:
 
     INFORM_ERROR = os.getenv("INFORM_ERROR", "TRUE") == "TRUE"
 
+    MAX_INVITE_LINKS = int(os.getenv("MAX_INVITE_LINKS", "1"))
+
     REPLY_CHARACTER = os.getenv("REPLY_CHARACTER", "!")
 
     STEP = int(os.getenv("STEP", "10"))

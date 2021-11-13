@@ -87,6 +87,11 @@ class Message:
     ENTITY_FROM = "<b><a href='tg://user?id={USER_ID}'>{FULL_NAME}</a></b>\n\n"
 
     ERROR = "Oops ! I faced an error : <code>{ERROR}</code>\n<code>{TRACEBACK}</code>"
+    
+    EXHAUSTED_INVITE_LINKS = (
+        "You've already requested to join the group. "
+        "Please be patient until your request is approved."
+    )
 
     FALLBACK_STATUS = "Left"
 
@@ -128,6 +133,8 @@ class Message:
     INVALID_COMMAND = "I don't understand what you are talking about …"
 
     INVALID_REPLY = "I expected this as a reply to a valid message."
+    
+    INVITE_LINKS_RESET = "You are now allowed to generate /invite links."
 
     JOIN_REQUEST = (
         "<b>Chat Join Request</b>\n"
@@ -144,12 +151,24 @@ class Message:
     JOIN_REQUEST_DECLINED = (
         "#Declined by <a href='tg://user?id={USER_ID}'>{FULL_NAME}</a>"
     )
+    
+    KICKED_IN_GROUP = (
+        "You've been banned from the group. "
+        "Hence you're not allowed to generate any invite links."
+    )
+
+    MUTED_IN_GROUP = (
+        "You're already in the group but muted. If you want to get unmuted, "
+        "reply to this message with your concern."
+    )
 
     NO_ANNOUNCEMENT = "No announcement is in due to cancel."
 
     NOT_LINKED = "I don't think that message corresponds to any user."
 
     NOT_PRIVATE_COMMAND = "Sorry, this command is meant to be used in admins group."
+    
+    RESET_COUNT = "<a href='tg://user?id={USER_ID}'>{FULL_NAME}</a> invite links count has been reset."
 
     START_GROUP = "I'm all alive and functioning."
 

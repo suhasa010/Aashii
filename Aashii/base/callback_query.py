@@ -15,8 +15,10 @@ from Aashii.utils.wrappers import check_is_blocked_by_user
 def answer_join_request(update: Update, context: CallbackContext):
     """Approve or decline user to join the group."""
     update.callback_query.answer()
+    database = context.bot_data["database"]
     admin_id = update.callback_query.from_user.id
     user_id, _ = get_user_src_message(update, context)
+    msg_id = database.get_last_invite_message_id(user_id)
     full_name = update.callback_query.from_user.full_name
     status = ""
 
@@ -29,6 +31,7 @@ def answer_join_request(update: Update, context: CallbackContext):
         context.bot.decline_chat_join_request(Literal.CHAT_GROUP_ID, user_id)
         context.bot.send_message(user_id, Message.INFORM_DECLINE)
 
+    context.bot.delete_message(user_id, msg_id)
     text = update.callback_query.message.text_html_urled.replace(
         Label.PENDING_REQUEST, ""
     )

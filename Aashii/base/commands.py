@@ -105,6 +105,61 @@ def delete(update: Update, context: CallbackContext):
         update.message.reply_html(Message.NOT_LINKED)
 
 
+@check_user_status
+def invite_user(update: Update, context: CallbackContext):
+    """Invite user to group and handle other use cases."""
+    database = context.bot_data["database"]
+    user_id = update.message.from_user.id
+    chat_mem = context.bot.get_chat_member(Literal.CHAT_GROUP_ID, user_id)
+    in_group = chat_mem.status in (
+        ChatMember.ADMINISTRATOR,
+        ChatMember.CREATOR,
+        ChatMember.MEMBER,
+    )
+    is_restricted = chat_mem.status == ChatMember.RESTRICTED
+    is_kicked = chat_mem.status == ChatMember.KICKED
+
+    if in_group:
+        update.message.reply_html(Message.ALREADY_IN_GROUP)
+        update.message.reply_sticker(
+            sticker="CAACAgUAAxkBAAEMESVhIUl4D7eR_8deoYsSIMgw__HWDAAC7QIAAuiU4FRdXc-plxm3OiAE",
+        )
+    elif is_kicked:
+        update.message.reply_html(Message.KICKED_IN_GROUP)
+    elif is_restricted:
+        update.message.reply_html(Message.MUTED_IN_GROUP)
+    else:
+        count = database.get_invite_links_count(user_id)
+        if count < Literal.MAX_INVITE_LINKS:
+            static_command(update, context)
+            context.user_data["expectInviteAnswers"] = True
+        else:
+            update.message.reply_html(Message.EXHAUSTED_INVITE_LINKS)
+
+
+@check_is_group_command
+def reset(update: Update, context: CallbackContext):
+    """Reset count of invite links for a user."""
+    database = context.bot_data["database"]
+
+    if context.args and context.args[0].isdigit():
+        user_id = int(context.args[0])
+    else:
+        user_id, _ = get_user_src_message(update, context)
+        if not user_id:
+            update.message.reply_html(Message.INVALID_REPLY)
+            return
+
+    database.reset_invite_links(user_id)
+    full_name = database.get_user_full_name(user_id)
+    text = Message.RESET_COUNT.format(FULL_NAME=full_name, USER_ID=user_id)
+    src_msg_id = context.bot.send_message(
+        chat_id=user_id, text=Message.INVITE_LINKS_RESET
+    ).message_id
+    dst_msg_id = update.effective_message.reply_html(text).message_id
+    database.add_user_message(src_msg_id, user_id, dst_msg_id)
+
+
 def send_help(update: Update, context: CallbackContext):
     """Send the bot's usage guide intended for private or\
     group depending upon the place of invocation."""
@@ -122,9 +177,9 @@ def send_help(update: Update, context: CallbackContext):
 def send_start(update: Update, context: CallbackContext):
     """Connect the user with admins group in case of private chat,\
     else show the bot's description."""
+    context.bot_data.pop("lastUserId", None)
     if update.message.chat.type != update.message.chat.PRIVATE:
         update.message.reply_html(Message.START_GROUP)
-        context.bot_data["lastUserId"] = Literal.ADMINS_GROUP_ID
         return
 
     buttons = [Button.BLOCK, Button.CONNECT]
@@ -163,24 +218,6 @@ def send_start(update: Update, context: CallbackContext):
 def static_command(update: Update, context: CallbackContext):
     """Send static command mentioned in static folder."""
     command = update.message.text[1:].split("@")[0]
-    user_id = update.message.from_user.id
-    chat_mem = context.bot.get_chat_member(Literal.CHAT_GROUP_ID, user_id)
-    user_in_group = chat_mem.status in (
-        ChatMember.ADMINISTRATOR,
-        ChatMember.CREATOR,
-        ChatMember.MEMBER,
-    )
-
-    if command == "invite":
-        if user_in_group:
-            update.message.reply_html(Message.ALREADY_IN_GROUP)
-            context.bot.send_sticker(
-                chat_id=user_id,
-                sticker="CAACAgUAAxkBAAEMESVhIUl4D7eR_8deoYsSIMgw__HWDAAC7QIAAuiU4FRdXc-plxm3OiAE",
-            )
-            return
-        context.user_data["expectInviteAnswers"] = True
-
     try:
         text = open(f"data/static/{command}").read()
     except FileNotFoundError:

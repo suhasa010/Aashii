@@ -10,6 +10,10 @@ class Query:
         "VALUES (%(message_id)s, %(user_id)s, %(dest_message_id)s);"
     )
 
+    ADD_INVITE_LINK = (
+        "INSERT INTO invite_links " "VALUES (%(user_id)s, %(message_id)s);"
+    )
+
     ADD_USER_MESSAGE = (
         "INSERT INTO from_users "
         "VALUES (%(user_id)s, %(message_id)s, %(dest_message_id)s);"
@@ -25,6 +29,14 @@ class Query:
     GET_DEST_MESSAGE_ID_USERS = (
         "SELECT dest_message_id FROM from_users "
         "WHERE user_id = %(user_id)s AND message_id = %(message_id)s;"
+    )
+
+    GET_INVITE_LINKS_COUNT = (
+        "SELECT COUNT(message_id) FROM invite_links " "WHERE user_id = %(user_id)s;"
+    )
+
+    GET_LAST_INVITE_MESSAGE_ID = (
+        "SELECT MAX(message_id) FROM invite_links WHERE user_id = %(user_id)s;"
     )
 
     GET_LAST_USER_MESSAGE_ID = (
@@ -55,6 +67,8 @@ class Query:
     GET_USER_BLOCKED = "SELECT blocked FROM users WHERE user_id = %(user_id)s;"
 
     GET_USERS = "SELECT user_id FROM users;"
+
+    RESET_INVITE_LINKS = "DELETE FROM invite_links WHERE user_id = %(user_id)s;"
 
     SET_USER_BLOCKED = (
         "UPDATE users SET blocked = %(blocked)s WHERE user_id = %(user_id)s;"

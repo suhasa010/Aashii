@@ -14,6 +14,8 @@ from Aashii.base.commands import (
     block_user_cl,
     cancel_announcement,
     delete,
+    invite_user,
+    reset,
     send_help,
     send_start,
     static_command,
@@ -72,6 +74,20 @@ handlers = {
             {
                 "command": "help",
                 "callback": send_help,
+                "filters": ~Filters.chat(Literal.CHAT_GROUP_ID),
+            },
+        ),
+        (
+            {
+                "command": "invite",
+                "callback": invite_user,
+                "filters": ~Filters.chat(Literal.CHAT_GROUP_ID),
+            },
+        ),
+        (
+            {
+                "command": "reset",
+                "callback": reset,
                 "filters": ~Filters.chat(Literal.CHAT_GROUP_ID),
             },
         ),

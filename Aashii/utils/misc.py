@@ -3,7 +3,7 @@
 import logging
 import traceback
 import re
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardMarkup, Update
 from telegram.error import Unauthorized
 from telegram.ext import CallbackContext
 from Aashii.constants import Button, Literal, Message
@@ -111,6 +111,7 @@ def request_join(update: Update, context: CallbackContext):
         context.bot.decline_chat_join_request(Literal.CHAT_GROUP_ID, user_id)
         return
 
+    context.bot_data.pop("lastUserId", None)
     full_name = update.chat_join_request.from_user.full_name
     last_message_id = database.get_last_user_message_id(user_id)
     text = Message.JOIN_REQUEST.format(

@@ -17,6 +17,7 @@ commands = {
         BotCommand("block", "Block the user"),
         BotCommand("cancel", "Cancel the announcement"),
         BotCommand("delete", "Delete the message of admin"),
+        BotCommand("reset", "Reset the invite links count"),
         BotCommand("unblock", "Unblock the user"),
         BotCommand("whois", "Get the details of replied user"),
     ],

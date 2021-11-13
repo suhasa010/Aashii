@@ -73,6 +73,7 @@ def edit_admin_message(update: Update, context: CallbackContext):
 @check_is_blocked_by_user
 def forward_to_user(update: Update, context: CallbackContext):
     """Send the message from admins to the user."""
+    context.bot_data.pop("lastUserId", None)
     if not update.message.reply_to_message:
         return
     user_id, reply_to = get_user_src_message(update, context)
