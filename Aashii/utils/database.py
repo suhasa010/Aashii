@@ -29,20 +29,6 @@ class Database:
         self.connection.commit()
         cur.close()
 
-    def add_user_message(self, message_id: int, user_id: int, dest_message_id: int):
-        """Add the message from user to the database."""
-        cur = self.connection.cursor()
-        cur.execute(
-            Query.ADD_USER_MESSAGE,
-            {
-                "message_id": message_id,
-                "user_id": user_id,
-                "dest_message_id": dest_message_id,
-            },
-        )
-        self.connection.commit()
-        cur.close()
-
     def add_invite_link(self, user_id: int, message_id: int):
         """Add message with invite link generated for given user."""
         cur = self.connection.cursor()
@@ -66,21 +52,19 @@ class Database:
         self.connection.commit()
         cur.close()
 
-    def get_invite_links_count(self, user_id: int):
-        """Get the number of invite links generated for user."""
+    def add_user_message(self, message_id: int, user_id: int, dest_message_id: int):
+        """Add the message from user to the database."""
         cur = self.connection.cursor()
-        cur.execute(Query.GET_INVITE_LINKS_COUNT, {"user_id": user_id})
-        (count,) = next(cur, (0,))
+        cur.execute(
+            Query.ADD_USER_MESSAGE,
+            {
+                "message_id": message_id,
+                "user_id": user_id,
+                "dest_message_id": dest_message_id,
+            },
+        )
+        self.connection.commit()
         cur.close()
-        return count
-
-    def get_last_invite_message_id(self, user_id: int):
-        """Get the latest invite message of given user."""
-        cur = self.connection.cursor()
-        cur.execute(Query.GET_LAST_INVITE_MESSAGE_ID, {"user_id": user_id})
-        (message_id,) = next(cur, (0,))
-        cur.close()
-        return message_id
 
     def get_last_user_message_id(self, user_id: int):
         """Get the latest message from given user."""
@@ -146,6 +130,30 @@ class Database:
         cur.close()
         return message_id
 
+    def get_invite_links_count(self, user_id: int):
+        """Return the number of invite links for given user."""
+        cur = self.connection.cursor()
+        cur.execute(Query.GET_INVITE_LINKS_COUNT, {"user_id": user_id})
+        (count,) = next(cur, (0,))
+        cur.close()
+        return count
+
+    def get_invite_message_id(self, user_id: int):
+        """Return message ID of invite message."""
+        cur = self.connection.cursor()
+        cur.execute(Query.GET_INVITE_MESSAGE_ID, {"user_id": user_id})
+        (message_id,) = next(cur, (None,))
+        cur.close()
+        return message_id
+
+    def get_invite_pending(self, user_id: int):
+        """Return True if the given user has pending join request."""
+        cur = self.connection.cursor()
+        cur.execute(Query.GET_INVITE_PENDING, {"user_id": user_id})
+        (pending,) = next(cur, (False,))
+        cur.close()
+        return pending
+
     def get_user_blocked(self, user_id: int):
         """Get the user status as True if they are blocked and False on otherwise."""
         cur = self.connection.cursor()
@@ -169,6 +177,16 @@ class Database:
         cur.execute(Query.RESET_INVITE_LINKS, {"user_id": user_id})
         self.connection.commit()
         cur.close()
+
+    def set_invite_pending(self, user_id: int, pending: bool):
+        """Set pending for given user."""
+        cur = self.connection.cursor()
+        cur.execute(
+            Query.SET_INVITE_PENDING,
+            {"user_id": user_id, "pending": pending},
+        )
+        cur.close()
+        self.connection.commit()
 
     def set_user_blocked(self, user_id: int, blocked: bool):
         """Set the user status as True if they are blocked and False on otherwise."""

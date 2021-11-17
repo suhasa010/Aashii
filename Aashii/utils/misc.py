@@ -128,6 +128,7 @@ def request_join(update: Update, context: CallbackContext):
         reply_markup=markup,
         reply_to_message_id=last_message_id,
     )
+    database.set_invite_pending(user_id, True)
     database.add_user_message(last_message_id, user_id, dest.message_id)
 
 

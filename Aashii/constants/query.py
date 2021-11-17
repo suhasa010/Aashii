@@ -11,7 +11,10 @@ class Query:
     )
 
     ADD_INVITE_LINK = (
-        "INSERT INTO invite_links " "VALUES (%(user_id)s, %(message_id)s);"
+        "INSERT INTO invite_links "
+        "VALUES (%(user_id)s, %(message_id)s) "
+        "ON CONFLICT (user_id) DO UPDATE "
+        "SET message_id = %(message_id)s, links_count = invite_links.links_count + 1, pending = FALSE;"
     )
 
     ADD_USER_MESSAGE = (
@@ -32,11 +35,13 @@ class Query:
     )
 
     GET_INVITE_LINKS_COUNT = (
-        "SELECT COUNT(message_id) FROM invite_links " "WHERE user_id = %(user_id)s;"
+        "SELECT links_count FROM invite_links WHERE user_id = %(user_id)s;"
     )
 
-    GET_LAST_INVITE_MESSAGE_ID = (
-        "SELECT MAX(message_id) FROM invite_links WHERE user_id = %(user_id)s;"
+    GET_INVITE_PENDING = "SELECT pending FROM invite_links WHERE user_id = %(user_id)s;"
+
+    GET_INVITE_MESSAGE_ID = (
+        "SELECT message_id FROM invite_links WHERE user_id = %(user_id)s;"
     )
 
     GET_LAST_USER_MESSAGE_ID = (
@@ -68,7 +73,13 @@ class Query:
 
     GET_USERS = "SELECT user_id FROM users;"
 
-    RESET_INVITE_LINKS = "DELETE FROM invite_links WHERE user_id = %(user_id)s;"
+    RESET_INVITE_LINKS = (
+        "UPDATE invite_links SET links_count = 0 WHERE user_id = %(user_id)s;"
+    )
+
+    SET_INVITE_PENDING = (
+        "UPDATE invite_links SET pending = %(pending)s WHERE user_id = %(user_id)s;"
+    )
 
     SET_USER_BLOCKED = (
         "UPDATE users SET blocked = %(blocked)s WHERE user_id = %(user_id)s;"

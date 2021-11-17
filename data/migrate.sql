@@ -1,16 +1,20 @@
-ALTER TABLE users RENAME status TO blocked;
-
-CREATE TABLE from_admins (
-    message_id INTEGER NOT NULL,
-    user_id BIGINT REFERENCES users,
-    dest_message_id INTEGER NOT NULL
+CREATE TEMPORARY TABLE tempinvite (
+    user_id BIGINT,
+    message_id INTEGER,
+    links_count INTEGER,
+    pending BOOL
 );
 
-CREATE TABLE from_users (
-    user_id BIGINT REFERENCES users,
+INSERT INTO tempinvite (SELECT user_id, MAX(message_id), COUNT(message_id), FALSE FROM invite_links GROUP BY user_id);
+
+DROP TABLE invite_links;
+
+CREATE TABLE invite_links (
+    user_id BIGINT PRIMARY KEY REFERENCES users,
     message_id INTEGER NOT NULL,
-    dest_message_id INTEGER NOT NULL
+    links_count INTEGER NOT NULL DEFAULT 1,
+    pending BOOL NOT NULL DEFAULT FALSE
 );
 
-INSERT INTO from_users (SELECT user_id, -1, message_id FROM messages);
-DROP TABLE messages;
+INSERT INTO invite_links (SELECT * from tempinvite);
+DROP TABLE tempinvite;

@@ -89,8 +89,8 @@ class Message:
     ERROR = "Oops ! I faced an error : <code>{ERROR}</code>\n<code>{TRACEBACK}</code>"
     
     EXHAUSTED_INVITE_LINKS = (
-        "You've already requested to join the group. "
-        "Please be patient until your request is approved."
+        "You can only request to join the group once. "
+        "Repeated requests are not appreciated."
     )
 
     FALLBACK_STATUS = "Left"
