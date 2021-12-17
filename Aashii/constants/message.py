@@ -123,6 +123,7 @@ class Message:
     INFORM_APPROVAL = (
         "Congratulations, you have been approved and added to "
         "<b>A GRoUP Of eBooKz® group</b>."
+        "\nPlease read all the pinned messages before making any request.\n"
     )
 
     INFORM_DECLINE = (
