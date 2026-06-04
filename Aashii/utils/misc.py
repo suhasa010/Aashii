@@ -1,17 +1,19 @@
 """Miscellaneous functions."""
 
 import logging
-import traceback
 import re
+import traceback
+
 from telegram import InlineKeyboardMarkup, Update
-from telegram.error import Unauthorized
+from telegram.error import Forbidden
 from telegram.ext import CallbackContext
+
 from Aashii.constants import Button, Literal, Message
 
 _p = re.compile("<[^>]*>")
 
 
-def add_user(update: Update, context: CallbackContext):
+async def add_user(update: Update, context: CallbackContext):
     """Add or update the user to database."""
     if not update.effective_message:
         return
@@ -21,20 +23,20 @@ def add_user(update: Update, context: CallbackContext):
     user_id = user.id
     full_name = user.full_name
     username = f"@{user.username}" if user.username else None
-    database.add_user(user_id, username, full_name)
+    await database.add_user(user_id, username, full_name)
 
 
-def block_user(user_id: int, context: CallbackContext):
+async def block_user(user_id: int, context: CallbackContext):
     """Blocks the user from contacting admins and informs the user."""
     database = context.bot_data["database"]
     database.set_user_blocked(user_id, True)
     try:
-        msg = context.bot.send_photo(
+        msg = await context.bot.send_photo(
             photo="https://telegra.ph/file/68aa3d09729058f1883f5.jpg",
             chat_id=user_id,
             caption=Message.BLOCKED_USER_STATUS,
         )
-    except Unauthorized:
+    except Forbidden:
         return 0
     else:
         return msg.message_id
@@ -45,31 +47,28 @@ def dehtml(text: str):
     return _p.sub("", text)
 
 
-def error_handler(_: object, context: CallbackContext):
-    """Handle the known errors and exceptions."""
-    error = str(context.error)
-    tb = "".join(
-        traceback.format_tb(context.error.__traceback__, Literal.TRACEBACK_VALUE)
-    )
-    logging.error(context.error)
-    return
-    error_text = Message.ERROR.format(ERROR=error, TRACEBACK=tb)
-    if Literal.INFORM_ERROR:
-        try:
-            context.bot.send_message(
-                chat_id=Literal.ADMINS_GROUP_ID,
-                text=error_text,
+async def error_handler(update, context):
+    import traceback
+
+    logging.error("ERROR TYPE: %s", type(context.error))
+    logging.error("ERROR VALUE: %s", context.error)
+
+    if getattr(context.error, "__traceback__", None):
+        logging.error(
+            "".join(
+                traceback.format_exception(
+                    type(context.error),
+                    context.error,
+                    context.error.__traceback__,
+                )
             )
-        except:
-            logging.error("%s\n%s", error, tb)
-    else:
-        logging.error("%s\n%s", error, tb)
+        )
 
 
-def get_membership(user_id: int, context: CallbackContext):
+async def get_membership(user_id: int, context: CallbackContext):
     """Return membership of user."""
     try:
-        mem = context.get_chat_member(Literal.CHAT_GROUP_ID, user_id)
+        mem = await context.get_chat_member(Literal.CHAT_GROUP_ID, user_id)
     except Exception as e:
         print(e)
         membership = Message.FALLBACK_STATUS
@@ -79,7 +78,7 @@ def get_membership(user_id: int, context: CallbackContext):
     return membership
 
 
-def get_user_src_message(update: Update, context: CallbackContext):
+async def get_user_src_message(update: Update, context: CallbackContext):
     """Return user ID and source message ID if the message is a reply to user's message."""
     database = context.bot_data["database"]
     message = update.effective_message
@@ -99,7 +98,7 @@ def get_user_src_message(update: Update, context: CallbackContext):
     return (user_id, src_msg_id)
 
 
-def request_join(update: Update, context: CallbackContext):
+async def request_join(update: Update, context: CallbackContext):
     """Send a message in admins group to request addition in chat group."""
     database = context.bot_data["database"]
     user_id = update.chat_join_request.from_user.id
@@ -108,7 +107,7 @@ def request_join(update: Update, context: CallbackContext):
     blocked = database.get_user_blocked(user_id)
 
     if blocked:
-        context.bot.decline_chat_join_request(Literal.CHAT_GROUP_ID, user_id)
+        await context.bot.decline_chat_join_request(Literal.CHAT_GROUP_ID, user_id)
         return
 
     context.bot_data.pop("lastUserId", None)
@@ -122,7 +121,7 @@ def request_join(update: Update, context: CallbackContext):
     )
     markup = InlineKeyboardMarkup([[Button.APPROVE, Button.DECLINE]])
 
-    dest = context.bot.send_message(
+    dest = await context.bot.send_message(
         chat_id=Literal.ADMINS_GROUP_ID,
         text=text,
         reply_markup=markup,
@@ -132,16 +131,16 @@ def request_join(update: Update, context: CallbackContext):
     database.add_user_message(last_message_id, user_id, dest.message_id)
 
 
-def unblock_user(user_id: int, context: CallbackContext):
+async def unblock_user(user_id: int, context: CallbackContext):
     """Unblock the user from contacting admins and informs the user."""
     database = context.bot_data["database"]
     database.set_user_blocked(user_id, False)
     try:
-        msg = context.bot.send_message(
+        msg = await context.bot.send_message(
             chat_id=user_id,
             text=Message.UNBLOCKED_USER_STATUS,
         )
-    except Unauthorized:
+    except Forbidden:
         return 0
     else:
         return msg.message_id

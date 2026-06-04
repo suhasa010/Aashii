@@ -1,6 +1,7 @@
 """Module containing Database object."""
 
 import psycopg2
+
 from Aashii.constants import Query
 
 
@@ -42,7 +43,7 @@ class Database:
         self.connection.commit()
         cur.close()
 
-    def add_user(self, user_id: int, username: str, full_name: str):
+    async def add_user(self, user_id: int, username: str, full_name: str):
         """Add the user with unblocked status."""
         cur = self.connection.cursor()
         cur.execute(

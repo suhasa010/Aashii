@@ -1,61 +1,95 @@
 """Contains the Server object."""
 
+import asyncio
 import logging
 
-# import sentry_sdk
-from telegram import ParseMode
-from telegram.ext import Defaults, Updater
+from telegram.constants import ParseMode
+from telegram.ext import Application, Defaults
 
 from Aashii.constants import Scope
 from Aashii.utils.database import Database
 from Aashii.utils.misc import error_handler
 
-# sentry_sdk.init(
-#     "https://c2099f5cd64c41f0aa071d8e0844a7e8@o915566.ingest.sentry.io/5857817",
-#     # Set traces_sample_rate to 1.0 to capture 100%
-#     # of transactions for performance monitoring.
-#     # We recommend adjusting this value in production.
-#     release="BookCrushContactBot@2.0.1",
-#     traces_sample_rate=0.7,
-#     debug=False,
-# )
-
 
 class Server:
     """Server takes care of setting up the bot, handlers and getting updates."""
 
-    def __init__(self, token: str, commands: dict, database_url: str, handlers: dict):
-        """Create a new Server."""
-        defaults = Defaults(parse_mode=ParseMode.HTML, allow_sending_without_reply=True)
-        self.updater = Updater(
-            token=token, defaults=defaults, user_sig_handler=self.signal_handler
+    def __init__(
+        self,
+        token: str,
+        commands: dict,
+        database_url: str,
+        handlers: dict,
+    ):
+        defaults = Defaults(
+            parse_mode=ParseMode.HTML,
+            allow_sending_without_reply=True,
         )
+
+        self.application = Application.builder().token(token).defaults(defaults).build()
+
         self.database = Database(database_url)
-        self.updater.dispatcher.bot_data["database"] = self.database
+
+        self.application.bot_data["database"] = self.database
+
         self._setup_handlers(handlers)
-        self._setup_commands(commands)
 
-    def _setup_commands(self, commands: dict):
+        self.commands = commands
 
-        admins = commands["admins"] + commands["all"]
-        private = commands["private"] + commands["all"]
-        self.updater.bot.set_my_commands(admins, scope=Scope.ADMINS)
-        self.updater.bot.set_my_commands(private, scope=Scope.PRIVATE)
+        self.application.post_init = self._post_init
+        self.application.post_shutdown = self._post_shutdown
+
+    async def _post_init(self, application: Application):
+        """Run after application startup."""
+
+        admins = self.commands["admins"] + self.commands["all"]
+        private = self.commands["private"] + self.commands["all"]
+
+        await application.bot.set_my_commands(
+            admins,
+            scope=Scope.ADMINS,
+        )
+
+        await application.bot.set_my_commands(
+            private,
+            scope=Scope.PRIVATE,
+        )
+
+    async def _post_shutdown(self, application: Application):
+        """Clean up resources."""
+
+        try:
+            del self.database
+        except Exception:
+            pass
+
+        logging.info("Got an interruption, bye.")
 
     def _setup_handlers(self, handlers: dict):
 
-        dispatcher = self.updater.dispatcher
         for handler_type, handles in handlers.items():
             for handle in handles:
                 h_kwargs, d_args = handle[0], handle[1:]
+                print("REGISTERING", h_kwargs.get("callback"))
                 handler = handler_type(**h_kwargs)
-                dispatcher.add_handler(handler, *d_args)
 
-        dispatcher.add_error_handler(error_handler)
+                self.application.add_handler(
+                    handler,
+                    *d_args,
+                )
 
-    def listen(self, listen: str, port: int, url: str, url_path: str):
+        self.application.add_error_handler(error_handler)
+
+    def listen(
+        self,
+        listen: str,
+        port: int,
+        url: str,
+        url_path: str,
+    ):
         """Listen for incoming webhook updates."""
-        self.updater.start_webhook(
+
+        self.application.run_webhook(
             listen=listen,
             port=port,
             url_path=url_path,
@@ -67,12 +101,11 @@ class Server:
                 "message",
             ],
         )
-        logging.info("Started listening ...")
-        self.updater.idle()
 
     def poll(self, poll_interval: int = 0):
-        """Poll for new updates."""
-        self.updater.start_polling(
+        """Poll for incoming updates."""
+
+        self.application.run_polling(
             poll_interval=poll_interval,
             allowed_updates=[
                 "callback_query",
@@ -81,10 +114,7 @@ class Server:
                 "message",
             ],
         )
-        logging.info("Started polling ...")
-        self.updater.idle()
 
     def signal_handler(self, *_):
-        """Clean up resources and sign off."""
-        del self.database
-        logging.info("Got an interruption, bye.")
+        """Backward compatibility stub."""
+        logging.info("Signal received.")

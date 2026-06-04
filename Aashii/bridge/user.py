@@ -1,16 +1,19 @@
 """Contains functions to send messages from users to admins."""
 
 from datetime import datetime, timedelta
-from telegram import ChatAction, Update
+
+from telegram import Update
+from telegram.constants import ChatAction
 from telegram.ext import CallbackContext
+
 from Aashii.constants import Literal, Message
 from Aashii.utils.transfer import send_edited_message, send_message
 from Aashii.utils.wrappers import check_user_status
 
 
-def _send_admins(context: CallbackContext):
+async def _send_admins(context: CallbackContext):
     database = context.bot_data["database"]
-    update, context = context.job.context
+    update, context = context.job.data
     message = update.message
     user_id = message.from_user.id
     quote = context.bot_data.get("lastUserId", 0) != user_id
@@ -25,7 +28,7 @@ def _send_admins(context: CallbackContext):
         else:
             reply_to = database.get_message_id_from_admins(user_id, reply.message_id)
 
-    dest_msgs = send_message(
+    dest_msgs = await send_message(
         context.bot, message, Literal.ADMINS_GROUP_ID, reply_to, False, quote
     )
 
@@ -38,26 +41,26 @@ def _send_admins(context: CallbackContext):
         _send_invite_link(update, context)
 
 
-def _send_invite_link(update: Update, context: CallbackContext):
+async def _send_invite_link(update: Update, context: CallbackContext):
     database = context.bot_data["database"]
     user_id = update.message.from_user.id
     expire = datetime.today() + timedelta(days=0, minutes=10)
-    link = context.bot.create_chat_invite_link(
+    link = await context.bot.create_chat_invite_link(
         chat_id=Literal.CHAT_GROUP_ID, expire_date=expire, creates_join_request=True
     )
     text = Message.CHAT_LINK_INFO.format(LINK=link.invite_link)
-    msg_id = update.message.reply_html(text).message_id
+    msg_id = await update.message.reply_html(text).message_id
     database.add_invite_link(user_id, msg_id)
 
 
 @check_user_status
-def edit_user_message(update: Update, context: CallbackContext):
+async def edit_user_message(update: Update, context: CallbackContext):
     """Edit the message of user sent to admins."""
     database = context.bot_data["database"]
     user_id = update.edited_message.from_user.id
     message_id = update.edited_message.message_id
     dest_message_id = database.get_dest_message_id_from_users(user_id, message_id)
-    new_dest_id = send_edited_message(
+    new_dest_id = await send_edited_message(
         context.bot,
         update.edited_message,
         dest_message_id,
@@ -70,11 +73,11 @@ def edit_user_message(update: Update, context: CallbackContext):
 
 
 @check_user_status
-def forward_to_admins(update: Update, context: CallbackContext):
+async def forward_to_admins(update: Update, context: CallbackContext):
     """Send the user's message to admins."""
-    context.bot.send_chat_action(
+    await context.bot.send_chat_action(
         chat_id=Literal.ADMINS_GROUP_ID, action=ChatAction.TYPING
     )
     context.job_queue.run_once(
-        callback=_send_admins, when=Literal.DELAY_SECONDS, context=(update, context)
+        callback=_send_admins, when=Literal.DELAY_SECONDS, data=(update, context)
     )

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Aashii is a bot to maintain communication between users and admins."""
 
+from dotenv import load_dotenv
+
+load_dotenv()
 from os import getenv
 from Aashii import Server
 from Aashii.commands import commands
